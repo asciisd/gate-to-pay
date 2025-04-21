@@ -75,17 +75,30 @@ $response = GateToPay::cardCashIn([
 
 ## Testing
 
-You can test your connection with:
+This package includes a comprehensive test suite. To run the tests, you need to set up the testing environment first:
+
+1. Copy the phpunit.xml.dist file to phpunit.xml:
 
 ```bash
-php artisan gatetopay:test
+cp phpunit.xml.dist phpunit.xml
 ```
 
-Or run the test suite:
+2. Update the phpunit.xml file with your test credentials:
+
+```xml
+<env name="GATE_TO_PAY_API_KEY" value="your-api-key-here"/>
+<env name="GATE_TO_PAY_USERNAME" value="your-username-here"/>
+<env name="GATE_TO_PAY_PASSWORD" value="your-password-here"/>
+<env name="GATE_TO_PAY_CUSTOMER_ID" value="your-customer-id-here"/>
+```
+
+3. Run the tests:
 
 ```bash
 composer test
 ```
+
+Note: The phpunit.xml file is gitignored to prevent committing sensitive credentials to your repository.
 
 ## License
 

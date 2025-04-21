@@ -11,12 +11,12 @@ return [
     |
     */
 
-    'api_key' => env('GATE_TO_PAY_API_KEY', ''),
-    'username' => env('GATE_TO_PAY_USERNAME', ''),
-    'password' => env('GATE_TO_PAY_PASSWORD', ''),
-    'base_url' => env('GATE_TO_PAY_BASE_URL', 'https://tradetest.gatetopay.com'),
-    'currency' => env('GATE_TO_PAY_CURRENCY', 'USD'),
-    'customer_id' => env('GATE_TO_PAY_CUSTOMER_ID', ''),
+    'api_key' => '',
+    'username' => '',
+    'password' => '',
+    'base_url' => 'https://tradetest.gatetopay.com',
+    'currency' => 'USD',
+    'customer_id' => '',
 
     /*
     |--------------------------------------------------------------------------

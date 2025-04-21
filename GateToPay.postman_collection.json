@@ -1,0 +1,333 @@
+{
+	"info": {
+		"_postman_id": "c5e8d3f7-4c8c-4d5a-9e2d-6b4f3a7b1234",
+		"name": "Gate To Pay API",
+		"description": "A collection for interacting with the Gate To Pay payment service API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get Customer Cards",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "APIKEY",
+						"value": "{{apiKey}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/api/Brokers/GetCustomerCards?customerId={{customerId}}&signature={{signature}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"Brokers",
+						"GetCustomerCards"
+					],
+					"query": [
+						{
+							"key": "customerId",
+							"value": "{{customerId}}"
+						},
+						{
+							"key": "signature",
+							"value": "{{signature}}",
+							"description": "Generated signature based on customerId"
+						}
+					]
+				},
+				"description": "Retrieves the list of cards associated with a customer."
+			},
+			"response": []
+		},
+		{
+			"name": "Card Cash Out",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "APIKEY",
+						"value": "{{apiKey}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customerId\": \"{{customerId}}\",\n    \"cardId\": \"{{cardId}}\",\n    \"depositAmount\": 100.00,\n    \"currency\": \"{{currency}}\",\n    \"transactionId\": \"{{$guid}}\",\n    \"cardExpiryDate\": \"09/25\",\n    \"signature\": \"{{signature}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/Brokers/CardCashOut",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"Brokers",
+						"CardCashOut"
+					]
+				},
+				"description": "Performs a card cash out transaction (deposit funds to a card)."
+			},
+			"response": []
+		},
+		{
+			"name": "Card Cash Out with OTP",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "APIKEY",
+						"value": "{{apiKey}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customerId\": \"{{customerId}}\",\n    \"cardId\": \"{{cardId}}\",\n    \"depositAmount\": 100.00,\n    \"currency\": \"{{currency}}\",\n    \"transactionId\": \"{{$guid}}\",\n    \"cardExpiryDate\": \"09/25\",\n    \"otp\": \"123456\",\n    \"signature\": \"{{signature}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/Brokers/CardCashOut",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"Brokers",
+						"CardCashOut"
+					]
+				},
+				"description": "Performs a card cash out transaction with OTP verification."
+			},
+			"response": []
+		},
+		{
+			"name": "Card Cash In",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "APIKEY",
+						"value": "{{apiKey}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customerId\": \"{{customerId}}\",\n    \"cardId\": \"{{cardId}}\",\n    \"withdrawalAmount\": 50.00,\n    \"currency\": \"{{currency}}\",\n    \"transactionId\": \"{{$guid}}\",\n    \"cardExpiryDate\": \"09/25\",\n    \"signature\": \"{{signature}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/Brokers/CardCashIn",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"Brokers",
+						"CardCashIn"
+					]
+				},
+				"description": "Performs a card cash in transaction (withdraw funds from a card)."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// This is a simplified version of signature generation",
+					"// In a real implementation, you would need to implement the actual signature logic",
+					"",
+					"function generateSignature(data) {",
+					"    // This is a placeholder for the actual signature generation logic",
+					"    // In the real implementation, you would use the same algorithm as in the SignatureService",
+					"    // For now, we'll just return a dummy signature",
+					"    return 'dummy-signature-' + new Date().getTime();",
+					"}",
+					"",
+					"// For Get Customer Cards",
+					"if (pm.request.url.getPath().includes('GetCustomerCards')) {",
+					"    const customerId = pm.variables.get('customerId');",
+					"    pm.variables.set('signature', generateSignature(customerId));",
+					"}",
+					"",
+					"// For Card Cash Out",
+					"if (pm.request.url.getPath().includes('CardCashOut')) {",
+					"    const customerId = pm.variables.get('customerId');",
+					"    const cardId = pm.variables.get('cardId');",
+					"    const depositAmount = 100.00;",
+					"    const currency = pm.variables.get('currency');",
+					"    const transactionId = pm.variables.replaceIn('{{$guid}}');",
+					"    const cardExpiryDate = '09/25';",
+					"    ",
+					"    // Check if OTP is included",
+					"    let signatureData = customerId + cardId + depositAmount + currency + transactionId + cardExpiryDate;",
+					"    if (pm.request.url.getPath().includes('OTP')) {",
+					"        signatureData += '123456'; // OTP value",
+					"    }",
+					"    ",
+					"    pm.variables.set('signature', generateSignature(signatureData));",
+					"}",
+					"",
+					"// For Card Cash In",
+					"if (pm.request.url.getPath().includes('CardCashIn')) {",
+					"    const customerId = pm.variables.get('customerId');",
+					"    const cardId = pm.variables.get('cardId');",
+					"    const withdrawalAmount = 50.00;",
+					"    const currency = pm.variables.get('currency');",
+					"    const transactionId = pm.variables.replaceIn('{{$guid}}');",
+					"    const cardExpiryDate = '09/25';",
+					"    ",
+					"    const signatureData = customerId + cardId + withdrawalAmount + currency + transactionId + cardExpiryDate;",
+					"    pm.variables.set('signature', generateSignature(signatureData));",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Basic response tests",
+					"pm.test(\"Status code is 200\", function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"pm.test(\"Response is valid JSON\", function () {",
+					"    pm.response.to.be.json;",
+					"});",
+					"",
+					"// Specific tests for different endpoints",
+					"if (pm.request.url.getPath().includes('GetCustomerCards')) {",
+					"    pm.test(\"Response contains cards array\", function () {",
+					"        const responseData = pm.response.json();",
+					"        pm.expect(responseData).to.have.property('data');",
+					"        pm.expect(responseData.data).to.be.an('array');",
+					"    });",
+					"}",
+					"",
+					"if (pm.request.url.getPath().includes('CardCashOut') || ",
+					"    pm.request.url.getPath().includes('CardCashIn')) {",
+					"    pm.test(\"Response contains transaction details\", function () {",
+					"        const responseData = pm.response.json();",
+					"        pm.expect(responseData).to.have.property('success');",
+					"        ",
+					"        // If success is true, check for transaction ID",
+					"        if (responseData.success === true) {",
+					"            pm.expect(responseData).to.have.property('transactionId');",
+					"            pm.expect(responseData).to.have.property('status');",
+					"        } ",
+					"        // If OTP is required",
+					"        else if (responseData.otpRequired === true) {",
+					"            pm.expect(responseData).to.have.property('message');",
+					"        }",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://tradetest.gatetopay.com",
+			"type": "string"
+		},
+		{
+			"key": "apiKey",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "currency",
+			"value": "USD",
+			"type": "string"
+		},
+		{
+			"key": "customerId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "cardId",
+			"value": "card-123",
+			"type": "string"
+		},
+		{
+			"key": "signature",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

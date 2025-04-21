@@ -1,147 +1,114 @@
 <?php
 
-namespace ASCIISD\GateToPay\Tests\Feature;
+namespace Tests\Feature;
 
 use ASCIISD\GateToPay\Exceptions\GateToPayException;
 use ASCIISD\GateToPay\Facades\GateToPay;
 use Illuminate\Support\Facades\Http;
-use Orchestra\Testbench\TestCase;
 
-class GateToPayServiceTest extends TestCase
-{
-    /**
-     * Get package providers.
-     *
-     * @param \Illuminate\Foundation\Application $app
-     * @return array
-     */
-    protected function getPackageProviders($app)
-    {
-        return [
-            'ASCIISD\GateToPay\GateToPayServiceProvider',
-        ];
-    }
-
-    /**
-     * Define environment setup.
-     *
-     * @param \Illuminate\Foundation\Application $app
-     * @return void
-     */
-    protected function defineEnvironment($app)
-    {
-        // Setup default database to use sqlite :memory:
-        $app['config']->set('gatetopay.api_key', '33a58c29-54ef-4858-8915-92fcae3a9103');
-        $app['config']->set('gatetopay.username', 'CaveoUSD.test');
-        $app['config']->set('gatetopay.password', 'P@ssw0rd');
-        $app['config']->set('gatetopay.base_url', 'https://tradetest.gatetopay.com');
-        $app['config']->set('gatetopay.currency', 'USD');
-        $app['config']->set('gatetopay.customer_id', '6541321568');
-        $app['config']->set('gatetopay.logging.enabled', false);
-    }
-
-    /** @test */
-    public function it_can_get_customer_cards()
-    {
-        Http::fake([
-            'tradetest.gatetopay.com/api/Brokers/GetCustomerCards*' => Http::response([
-                'data' => [
-                    [
-                        'id' => 'card-123',
-                        'cardType' => 'VISA',
-                        'last4Digits' => '1234',
-                    ],
+it('can get customer cards', function () {
+    Http::fake([
+        'tradetest.gatetopay.com/api/Brokers/GetCustomerCards*' => Http::response([
+            'data' => [
+                [
+                    'id' => 'card-123',
+                    'cardType' => 'VISA',
+                    'last4Digits' => '1234',
                 ],
-            ], 200),
-        ]);
+            ],
+        ], 200),
+    ]);
 
-        $cards = GateToPay::getCustomerCards();
+    $cards = GateToPay::getCustomerCards();
 
-        $this->assertIsArray($cards);
-        $this->assertCount(1, $cards);
-        $this->assertEquals('card-123', $cards[0]['id']);
-        $this->assertEquals('VISA', $cards[0]['cardType']);
-        $this->assertEquals('1234', $cards[0]['last4Digits']);
-    }
+    expect($cards)->toBeArray()
+        ->toHaveCount(1);
 
-    /** @test */
-    public function it_can_perform_card_cash_out()
-    {
-        Http::fake([
-            'tradetest.gatetopay.com/api/Brokers/CardCashOut*' => Http::response([
-                'success' => true,
-                'transactionId' => 'tx-123',
-                'status' => 'completed',
-            ], 200),
-        ]);
+    expect($cards[0]['id'])->toBe('card-123');
+    expect($cards[0]['cardType'])->toBe('VISA');
+    expect($cards[0]['last4Digits'])->toBe('1234');
+});
 
-        $response = GateToPay::cardCashOut([
-            'cardId' => 'card-123',
-            'depositAmount' => 100.00,
-            'cardExpiryDate' => '09/25',
-        ]);
+it('can perform card cash out', function () {
+    Http::fake([
+        'tradetest.gatetopay.com/api/Brokers/CardCashOut*' => Http::response([
+            'success' => true,
+            'transactionId' => 'tx-123',
+            'status' => 'completed',
+        ], 200),
+    ]);
 
-        $this->assertTrue($response['success']);
-        $this->assertEquals('tx-123', $response['transactionId']);
-        $this->assertEquals('completed', $response['status']);
-    }
+    $response = GateToPay::cardCashOut([
+        'cardId' => 'card-123',
+        'depositAmount' => 100.00,
+        'cardExpiryDate' => '09/25',
+    ]);
 
-    /** @test */
-    public function it_can_perform_card_cash_in()
-    {
-        Http::fake([
-            'tradetest.gatetopay.com/api/Brokers/CardCashIn*' => Http::response([
-                'success' => true,
-                'transactionId' => 'tx-456',
-                'status' => 'completed',
-            ], 200),
-        ]);
+    expect($response['success'])->toBeTrue();
+    expect($response['transactionId'])->toBe('tx-123');
+    expect($response['status'])->toBe('completed');
+});
 
-        $response = GateToPay::cardCashIn([
-            'cardId' => 'card-123',
-            'withdrawalAmount' => 50.00,
-            'cardExpiryDate' => '09/25',
-        ]);
+it('can perform card cash in', function () {
+    Http::fake([
+        'tradetest.gatetopay.com/api/Brokers/CardCashIn*' => Http::response([
+            'success' => true,
+            'transactionId' => 'tx-456',
+            'status' => 'completed',
+        ], 200),
+    ]);
 
-        $this->assertTrue($response['success']);
-        $this->assertEquals('tx-456', $response['transactionId']);
-        $this->assertEquals('completed', $response['status']);
-    }
+    $response = GateToPay::cardCashIn([
+        'cardId' => 'card-123',
+        'withdrawalAmount' => 50.00,
+        'cardExpiryDate' => '09/25',
+    ]);
 
-    /** @test */
-    public function it_handles_otp_requirement_for_cash_out()
-    {
-        Http::fake([
-            'tradetest.gatetopay.com/api/Brokers/CardCashOut*' => Http::response([
-                'success' => false,
-                'otpRequired' => true,
-                'message' => 'OTP verification required',
-            ], 200),
-        ]);
+    expect($response['success'])->toBeTrue();
+    expect($response['transactionId'])->toBe('tx-456');
+    expect($response['status'])->toBe('completed');
+});
 
-        $this->expectException(GateToPayException::class);
-        $this->expectExceptionCode(GateToPayException::OTP_REQUIRED);
+it('handles otp requirement for cash out', function () {
+    Http::fake([
+        'tradetest.gatetopay.com/api/Brokers/CardCashOut*' => Http::response([
+            'success' => false,
+            'otpRequired' => true,
+            'message' => 'OTP verification required',
+        ], 200),
+    ]);
 
+    try {
         GateToPay::cardCashOut([
             'cardId' => 'card-123',
             'depositAmount' => 100.00,
             'cardExpiryDate' => '09/25',
         ]);
+
+        // If we reach here, the test should fail
+        $this->fail('Expected GateToPayException was not thrown');
+    } catch (GateToPayException $e) {
+        expect($e->getCode())->toBe(GateToPayException::OTP_REQUIRED);
+        expect($e->getMessage())->toContain('OTP required for this transaction');
+        expect($e->isOtpRequired())->toBeTrue();
     }
+});
 
-    /** @test */
-    public function it_handles_api_errors()
-    {
-        Http::fake([
-            'tradetest.gatetopay.com/api/Brokers/GetCustomerCards*' => Http::response([
-                'success' => false,
-                'message' => 'Invalid API key',
-            ], 401),
-        ]);
+it('handles api errors', function () {
+    Http::fake([
+        'tradetest.gatetopay.com/api/Brokers/GetCustomerCards*' => Http::response([
+            'success' => false,
+            'message' => 'Invalid API key',
+        ], 401),
+    ]);
 
-        $this->expectException(GateToPayException::class);
-        $this->expectExceptionCode(401);
-
+    try {
         GateToPay::getCustomerCards();
+
+        // If we reach here, the test should fail
+        $this->fail('Expected GateToPayException was not thrown');
+    } catch (GateToPayException $e) {
+        expect($e->getCode())->toBe(401);
+        expect($e->getMessage())->toContain('Invalid API key');
     }
-}
+});
