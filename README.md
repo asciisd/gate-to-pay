@@ -34,7 +34,24 @@ GATE_TO_PAY_USERNAME=your-username
 GATE_TO_PAY_PASSWORD=your-password
 GATE_TO_PAY_BASE_URL=https://tradetest.gatetopay.com
 GATE_TO_PAY_CURRENCY=USD
-GATE_TO_PAY_CUSTOMER_ID=your-customer-id
+```
+
+## Migrations
+
+This package includes migrations to:
+1. Add a `gate_to_pay_customer_id` column to your users table
+2. Create a `gate_to_pay_cards` table to store customer card information
+
+To publish the migrations:
+
+```bash
+php artisan vendor:publish --provider="ASCIISD\GateToPay\GateToPayServiceProvider" --tag="migrations"
+```
+
+Then run the migrations:
+
+```bash
+php artisan migrate
 ```
 
 ## Usage
@@ -44,7 +61,7 @@ GATE_TO_PAY_CUSTOMER_ID=your-customer-id
 ```php
 use ASCIISD\GateToPay\Facades\GateToPay;
 
-$cards = GateToPay::getCustomerCards();
+$cards = GateToPay::getCustomerCards($customerId);
 ```
 
 ### Card Cash Out

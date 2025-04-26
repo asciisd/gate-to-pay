@@ -20,7 +20,6 @@ cp phpunit.xml.dist phpunit.xml
 <env name="GATE_TO_PAY_API_KEY" value="your-api-key-here"/>
 <env name="GATE_TO_PAY_USERNAME" value="your-username-here"/>
 <env name="GATE_TO_PAY_PASSWORD" value="your-password-here"/>
-<env name="GATE_TO_PAY_CUSTOMER_ID" value="your-customer-id-here"/>
 ```
 
 The `phpunit.xml` file is gitignored and will not be committed to the repository.

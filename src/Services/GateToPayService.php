@@ -47,13 +47,6 @@ class GateToPayService
     protected $currency;
 
     /**
-     * The customer ID.
-     *
-     * @var string
-     */
-    protected $customerId;
-
-    /**
      * The signature service.
      *
      * @var \ASCIISD\GateToPay\Helpers\SignatureService
@@ -68,46 +61,41 @@ class GateToPayService
      * @param string $username
      * @param string $password
      * @param string $currency
-     * @param string $customerId
      * @param \ASCIISD\GateToPay\Helpers\SignatureService $signatureService
      * @return void
      */
     public function __construct(
-        string $baseUrl,
-        string $apiKey,
-        string $username,
-        string $password,
-        string $currency,
-        string $customerId,
+        string           $baseUrl,
+        string           $apiKey,
+        string           $username,
+        string           $password,
+        string           $currency,
         SignatureService $signatureService
-    ) {
+    )
+    {
         $this->baseUrl = $baseUrl;
         $this->apiKey = $apiKey;
         $this->username = $username;
         $this->password = $password;
         $this->currency = $currency;
-        $this->customerId = $customerId;
         $this->signatureService = $signatureService;
     }
 
     /**
      * Get the customer's cards.
      *
-     * @param string|null $customerId
+     * @param string $customerId
      * @return array
      * @throws \ASCIISD\GateToPay\Exceptions\GateToPayException
      */
-    public function getCustomerCards(?string $customerId = null): array
+    public function getCustomerCards(string $customerId): array
     {
-        $customerId = $customerId ?? $this->customerId;
         $signature = $this->signatureService->generate($customerId);
 
-        $response = $this->makeRequest('GET', '/api/Brokers/GetCustomerCards', [
+        return $this->makeRequest('GET', '/api/Brokers/GetCustomerCards', [
             'customerId' => $customerId,
             'signature' => $signature,
         ]);
-
-        return $response['data'] ?? [];
     }
 
     /**
@@ -119,23 +107,27 @@ class GateToPayService
      */
     public function cardCashOut(array $params): array
     {
-        $customerId = $params['customerId'] ?? $this->customerId;
+        if (! isset($params['customerId'])) {
+            throw new GateToPayException('Customer ID is required for card cash out');
+        }
+
+        $customerId = $params['customerId'];
         $cardId = $params['cardId'] ?? null;
         $depositAmount = $params['depositAmount'] ?? null;
         $currency = $params['currency'] ?? $this->currency;
-        $transactionId = $params['transactionId'] ?? (string) Str::uuid();
+        $transactionId = $params['transactionId'] ?? (string)Str::uuid();
         $cardExpiryDate = $params['cardExpiryDate'] ?? null;
         $otp = $params['otp'] ?? null;
 
-        if (!$cardId || !$depositAmount || !$cardExpiryDate) {
+        if (! $cardId || ! $depositAmount || ! $cardExpiryDate) {
             throw new GateToPayException('Missing required parameters for card cash out');
         }
 
-        $signatureData = $customerId . $cardId . $depositAmount . $currency . $transactionId . $cardExpiryDate;
+        $signatureData = $customerId.$cardId.$depositAmount.$currency.$transactionId.$cardExpiryDate;
         if ($otp) {
             $signatureData .= $otp;
         }
-        
+
         $signature = $this->signatureService->generate($signatureData);
 
         $payload = [
@@ -155,12 +147,12 @@ class GateToPayService
         $response = $this->makeRequest('POST', '/api/Brokers/CardCashOut', [], $payload);
 
         // Check if OTP is required but not provided
-        if (isset($response['otpRequired']) && $response['otpRequired'] === true && !$otp) {
+        if (isset($response['otpRequired']) && $response['otpRequired'] === true && ! $otp) {
             // Wait for OTP input or callback
             // This is a simplified implementation - in a real-world scenario,
             // you might want to return a response indicating OTP is required
             // and let the client handle the OTP input
-            
+
             // For this example, we'll throw an exception with a specific code
             throw new GateToPayException(
                 'OTP required for this transaction. Please provide OTP and retry.',
@@ -180,18 +172,22 @@ class GateToPayService
      */
     public function cardCashIn(array $params): array
     {
-        $customerId = $params['customerId'] ?? $this->customerId;
+        if (! isset($params['customerId'])) {
+            throw new GateToPayException('Customer ID is required for card cash in');
+        }
+
+        $customerId = $params['customerId'];
         $cardId = $params['cardId'] ?? null;
         $withdrawalAmount = $params['withdrawalAmount'] ?? null;
         $currency = $params['currency'] ?? $this->currency;
-        $transactionId = $params['transactionId'] ?? (string) Str::uuid();
+        $transactionId = $params['transactionId'] ?? (string)Str::uuid();
         $cardExpiryDate = $params['cardExpiryDate'] ?? null;
 
-        if (!$cardId || !$withdrawalAmount || !$cardExpiryDate) {
+        if (! $cardId || ! $withdrawalAmount || ! $cardExpiryDate) {
             throw new GateToPayException('Missing required parameters for card cash in');
         }
 
-        $signatureData = $customerId . $cardId . $withdrawalAmount . $currency . $transactionId . $cardExpiryDate;
+        $signatureData = $customerId.$cardId.$withdrawalAmount.$currency.$transactionId.$cardExpiryDate;
         $signature = $this->signatureService->generate($signatureData);
 
         $payload = [
@@ -219,7 +215,7 @@ class GateToPayService
      */
     protected function makeRequest(string $method, string $endpoint, array $query = [], array $data = []): array
     {
-        $url = $this->baseUrl . $endpoint;
+        $url = $this->baseUrl.$endpoint;
 
         // Prepare the request
         $request = Http::withHeaders([
@@ -245,9 +241,9 @@ class GateToPayService
         try {
             $response = match (strtoupper($method)) {
                 'GET' => $request->get($url, $query),
-                'POST' => $request->post($url . $this->buildQueryString($query), $data),
-                'PUT' => $request->put($url . $this->buildQueryString($query), $data),
-                'DELETE' => $request->delete($url . $this->buildQueryString($query), $data),
+                'POST' => $request->post($url, $data),
+                'PUT' => $request->put($url, $data),
+                'DELETE' => $request->delete($url, $data),
                 default => throw new GateToPayException("Unsupported HTTP method: {$method}"),
             };
 
@@ -262,7 +258,7 @@ class GateToPayService
             }
 
             throw new GateToPayException(
-                'Error communicating with GateToPay API: ' . $e->getMessage(),
+                'Error communicating with GateToPay API: '.$e->getMessage(),
                 $e->getCode(),
                 $e
             );
@@ -289,11 +285,22 @@ class GateToPayService
                 ]);
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             $errorMessage = $body['message'] ?? $response->body();
             throw new GateToPayException(
-                'GateToPay API Error: ' . $errorMessage,
+                'GateToPay API Error: '.$errorMessage,
                 $response->status()
+            );
+        }
+
+        // Check for API-level errors in the new response structure
+        if (isset($body['isSuccess']) && $body['isSuccess'] === false) {
+            $errorMessage = $body['errorMessage'] ?? 'Unknown API error';
+            $errorCode = $body['errorCode'] ?? 0;
+
+            throw new GateToPayException(
+                'GateToPay API Error: '.$errorMessage,
+                (int)$errorCode
             );
         }
 
@@ -312,7 +319,7 @@ class GateToPayService
             return '';
         }
 
-        return '?' . http_build_query($query);
+        return '?'.http_build_query($query);
     }
 
     /**

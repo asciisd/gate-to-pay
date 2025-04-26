@@ -37,19 +37,21 @@ class TestConnectionCommand extends Command
             $cards = $service->getCustomerCards();
             
             $this->info('Connection successful!');
-            $this->info('Found ' . count($cards) . ' cards for the customer.');
             
-            if (!empty($cards)) {
+            if (isset($cards['customerCards']) && !empty($cards['customerCards'])) {
+                $this->info('Found ' . count($cards['customerCards']) . ' cards for the customer.');
+                
                 $this->table(
-                    ['Card ID', 'Card Type', 'Last 4 Digits'],
-                    collect($cards)->map(function ($card) {
+                    ['Card ID', 'Card Number'],
+                    collect($cards['customerCards'])->map(function ($card) {
                         return [
                             'Card ID' => $card['id'] ?? 'N/A',
-                            'Card Type' => $card['cardType'] ?? 'N/A',
-                            'Last 4 Digits' => $card['last4Digits'] ?? 'N/A',
+                            'Card Number' => $card['cardNumber'] ?? 'N/A',
                         ];
                     })->toArray()
                 );
+            } else {
+                $this->info('No cards found for the customer.');
             }
             
             return 0;

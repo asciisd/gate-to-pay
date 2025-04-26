@@ -7,53 +7,40 @@ use Illuminate\Support\Facades\Log;
 class SignatureService
 {
     /**
-     * The API key.
-     *
-     * @var string
-     */
-    protected $apiKey;
-
-    /**
      * Create a new SignatureService instance.
      *
      * @param string $apiKey
      * @return void
      */
-    public function __construct(string $apiKey)
+    public function __construct(protected string $apiKey)
     {
-        $this->apiKey = $apiKey;
+        //
     }
 
     /**
      * Generate a signature for the given data.
      *
-     * @param string $data
+     * @param string $str
      * @return string
      */
-    public function generate(string $data): string
+    public function generate(string $str): string
     {
         // Log the input data for signature generation
         if (config('gatetopay.logging.enabled', true)) {
             Log::channel(config('gatetopay.logging.channel', 'gatetopay'))
-                ->info('Generating signature for data: ' . $data);
+                ->info('Generating signature for data: '.$str);
         }
 
-        // Step 1: Create MD5 hash of the input data
-        $md5Hash = md5($data);
-
-        // Step 2: Prepare the encryption key (API key without dashes, used as hex)
-        $key = str_replace('-', '', $this->apiKey);
-
-        // Step 3: Encrypt using TripleDES with ECB mode, no padding
-        $encryptedData = $this->encryptTripleDES($md5Hash, $key);
+        $data = md5($str, true);
+        $signature = $this->encryptTripleDES($data, $this->apiKey);
 
         // Log the generated signature
         if (config('gatetopay.logging.enabled', true)) {
             Log::channel(config('gatetopay.logging.channel', 'gatetopay'))
-                ->info('Generated signature: ' . $encryptedData);
+                ->info('Generated signature: '.$signature);
         }
 
-        return $encryptedData;
+        return $signature;
     }
 
     /**
@@ -65,21 +52,11 @@ class SignatureService
      */
     protected function encryptTripleDES(string $data, string $key): string
     {
-        // Convert key to binary
-        $keyBin = hex2bin($key);
-        
-        // Use first 24 bytes of the key (TripleDES requires 24 bytes)
-        $keyBin = substr($keyBin . $keyBin, 0, 24);
-        
-        // Encrypt using TripleDES with ECB mode, no padding
-        $encrypted = openssl_encrypt(
-            $data,
-            'des-ede3',
-            $keyBin,
-            OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING
-        );
-        
-        // Convert to hexadecimal string
-        return bin2hex($encrypted);
+        $key = str_replace('-', '', $this->apiKey);
+        $key = hex2bin($key);
+        $key .= substr($key, 0, 8);
+        $encrypted = openssl_encrypt($data, 'DES-EDE3', $key, OPENSSL_RAW_DATA | OPENSSL_ZERO_PADDING);
+
+        return strtoupper(bin2hex($encrypted));
     }
 }

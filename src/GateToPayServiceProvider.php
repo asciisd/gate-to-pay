@@ -3,22 +3,20 @@
 namespace ASCIISD\GateToPay;
 
 use ASCIISD\GateToPay\Commands\TestConnectionCommand;
-use ASCIISD\GateToPay\Services\GateToPayService;
 use ASCIISD\GateToPay\Helpers\SignatureService;
+use ASCIISD\GateToPay\Services\GateToPayService;
 use Illuminate\Support\ServiceProvider;
 
 class GateToPayServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
         // Merge config
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/gatetopay.php', 'gatetopay'
+            __DIR__.'/../config/gatetopay.php', 'gatetopay'
         );
 
         // Register services
@@ -33,7 +31,6 @@ class GateToPayServiceProvider extends ServiceProvider
                 config('gatetopay.username'),
                 config('gatetopay.password'),
                 config('gatetopay.currency'),
-                config('gatetopay.customer_id'),
                 $app->make(SignatureService::class)
             );
         });
@@ -43,15 +40,18 @@ class GateToPayServiceProvider extends ServiceProvider
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
         // Publish config
         $this->publishes([
-            __DIR__ . '/../config/gatetopay.php' => config_path('gatetopay.php'),
+            __DIR__.'/../config/gatetopay.php' => config_path('gatetopay.php'),
         ], 'config');
+
+        // Publish migrations
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'migrations');
 
         // Register commands
         if ($this->app->runningInConsole()) {
