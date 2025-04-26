@@ -34,7 +34,7 @@ class TestConnectionCommand extends Command
 
         try {
             // Test the connection by fetching customer cards
-            $cards = $service->getCustomerCards();
+            $cards = $service->getCustomerCards('6999999999');
             
             $this->info('Connection successful!');
             
