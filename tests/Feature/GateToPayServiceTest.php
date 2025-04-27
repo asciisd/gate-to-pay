@@ -21,7 +21,7 @@ it('can get customer cards', function () {
         ], 200),
     ]);
 
-    $customerId = '6541321568'; // Sample customer ID
+    $customerId = '6999999999'; // Sample customer ID
     $cards = GateToPay::getCustomerCards($customerId);
 
     expect($cards)->toBeArray()
@@ -44,7 +44,7 @@ it('can perform card cash out', function () {
     ]);
 
     $response = GateToPay::cardCashOut([
-        'customerId' => '6541321568', // Sample customer ID
+        'customerId' => '6999999999', // Sample customer ID
         'cardId' => 'card-123',
         'depositAmount' => 100.00,
         'cardExpiryDate' => '09/25',
@@ -67,7 +67,7 @@ it('can perform card cash in', function () {
     ]);
 
     $response = GateToPay::cardCashIn([
-        'customerId' => '6541321568', // Sample customer ID
+        'customerId' => '6999999999', // Sample customer ID
         'cardId' => 'card-123',
         'withdrawalAmount' => 50.00,
         'cardExpiryDate' => '09/25',
@@ -90,7 +90,7 @@ it('handles otp requirement for cash out', function () {
 
     try {
         GateToPay::cardCashOut([
-            'customerId' => '6541321568', // Sample customer ID
+            'customerId' => '6999999999', // Sample customer ID
             'cardId' => 'card-123',
             'depositAmount' => 100.00,
             'cardExpiryDate' => '09/25',
@@ -114,7 +114,7 @@ it('handles api errors', function () {
     ]);
 
     try {
-        GateToPay::getCustomerCards('6541321568'); // Sample customer ID
+        GateToPay::getCustomerCards('6999999999'); // Sample customer ID
 
         // If we reach here, the test should fail
         $this->fail('Expected GateToPayException was not thrown');

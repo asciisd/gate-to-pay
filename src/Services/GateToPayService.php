@@ -4,81 +4,63 @@ namespace ASCIISD\GateToPay\Services;
 
 use ASCIISD\GateToPay\Exceptions\GateToPayException;
 use ASCIISD\GateToPay\Helpers\SignatureService;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use ASCIISD\GateToPay\Http\ApiClient;
 use Illuminate\Support\Str;
 
 class GateToPayService
 {
     /**
-     * The base URL for the API.
+     * The API client.
      *
-     * @var string
+     * @var ApiClient
      */
-    protected $baseUrl;
-
-    /**
-     * The API key.
-     *
-     * @var string
-     */
-    protected $apiKey;
+    protected ApiClient $apiClient;
 
     /**
      * The username.
      *
      * @var string
      */
-    protected $username;
+    protected string $username;
 
     /**
      * The password.
      *
      * @var string
      */
-    protected $password;
+    protected string $password;
 
     /**
      * The currency.
      *
      * @var string
      */
-    protected $currency;
+    protected string $currency;
 
     /**
      * The signature service.
      *
-     * @var \ASCIISD\GateToPay\Helpers\SignatureService
+     * @var SignatureService
      */
-    protected $signatureService;
+    protected SignatureService $signatureService;
 
     /**
      * Create a new GateToPayService instance.
      *
-     * @param string $baseUrl
-     * @param string $apiKey
-     * @param string $username
-     * @param string $password
-     * @param string $currency
-     * @param \ASCIISD\GateToPay\Helpers\SignatureService $signatureService
+     * @param SignatureService $signatureService
      * @return void
      */
-    public function __construct(
-        string           $baseUrl,
-        string           $apiKey,
-        string           $username,
-        string           $password,
-        string           $currency,
-        SignatureService $signatureService
-    )
+    public function __construct(SignatureService $signatureService)
     {
-        $this->baseUrl = $baseUrl;
-        $this->apiKey = $apiKey;
-        $this->username = $username;
-        $this->password = $password;
-        $this->currency = $currency;
         $this->signatureService = $signatureService;
+
+        // Set Trade API credentials
+        $this->username = config('gatetopay.trade_api.username', '');
+        $this->password = config('gatetopay.trade_api.password', '');
+        $this->currency = config('gatetopay.trade_api.currency', 'USD');
+
+        // Get API client for Trade API from the container
+        $this->apiClient = app('gatetopay.api.trade');
     }
 
     /**
@@ -86,24 +68,35 @@ class GateToPayService
      *
      * @param string $customerId
      * @return array
-     * @throws \ASCIISD\GateToPay\Exceptions\GateToPayException
+     * @throws GateToPayException
      */
     public function getCustomerCards(string $customerId): array
     {
+        // Validate customerId
+        if (empty($customerId)) {
+            throw new GateToPayException('Customer ID is required');
+        }
+
+        // Generate signature
         $signature = $this->signatureService->generate($customerId);
 
-        return $this->makeRequest('GET', '/api/Brokers/GetCustomerCards', [
-            'customerId' => $customerId,
-            'signature' => $signature,
-        ]);
+        // Make the request
+        return $this->apiClient->request(
+            'GET',
+            '/api/Brokers/GetCustomerCards',
+            [
+                'customerId' => $customerId,
+                'signature' => $signature,
+            ]
+        );
     }
 
     /**
-     * Perform a card cash out transaction.
+     * Perform a card cash-out transaction.
      *
      * @param array $params
      * @return array
-     * @throws \ASCIISD\GateToPay\Exceptions\GateToPayException
+     * @throws GateToPayException
      */
     public function cardCashOut(array $params): array
     {
@@ -144,7 +137,7 @@ class GateToPayService
             $payload['otp'] = $otp;
         }
 
-        $response = $this->makeRequest('POST', '/api/Brokers/CardCashOut', [], $payload);
+        $response = $this->apiClient->request('POST', '/api/Brokers/CardCashOut', [], $payload);
 
         // Check if OTP is required but not provided
         if (isset($response['otpRequired']) && $response['otpRequired'] === true && ! $otp) {
@@ -168,7 +161,7 @@ class GateToPayService
      *
      * @param array $params
      * @return array
-     * @throws \ASCIISD\GateToPay\Exceptions\GateToPayException
+     * @throws GateToPayException
      */
     public function cardCashIn(array $params): array
     {
@@ -200,151 +193,34 @@ class GateToPayService
             'signature' => $signature,
         ];
 
-        return $this->makeRequest('POST', '/api/Brokers/CardCashIn', [], $payload);
+        return $this->apiClient->request('POST', '/api/Brokers/CardCashIn', [], $payload);
     }
 
     /**
-     * Make an HTTP request to the API.
+     * Create a new customer profile.
      *
-     * @param string $method
-     * @param string $endpoint
-     * @param array $query
-     * @param array $data
+     * This method is now moved to CMSApiService.
+     * This is kept for backward compatibility.
+     *
+     * @param array $params
      * @return array
-     * @throws \ASCIISD\GateToPay\Exceptions\GateToPayException
+     * @throws GateToPayException
      */
-    protected function makeRequest(string $method, string $endpoint, array $query = [], array $data = []): array
+    public function createNewProfile(array $params): array
     {
-        $url = $this->baseUrl.$endpoint;
-
-        // Prepare the request
-        $request = Http::withHeaders([
-            'APIKEY' => $this->apiKey,
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json',
-        ]);
-
-        // Log the request
-        if (config('gatetopay.logging.enabled', true)) {
-            $logData = [
-                'method' => $method,
-                'url' => $url,
-                'query' => $query,
-                'data' => $this->sanitizeDataForLogging($data),
-            ];
-
-            Log::channel(config('gatetopay.logging.channel', 'gatetopay'))
-                ->info('GateToPay API Request', $logData);
-        }
-
-        // Make the request
-        try {
-            $response = match (strtoupper($method)) {
-                'GET' => $request->get($url, $query),
-                'POST' => $request->post($url, $data),
-                'PUT' => $request->put($url, $data),
-                'DELETE' => $request->delete($url, $data),
-                default => throw new GateToPayException("Unsupported HTTP method: {$method}"),
-            };
-
-            return $this->handleResponse($response);
-        } catch (\Exception $e) {
-            if (config('gatetopay.logging.enabled', true)) {
-                Log::channel(config('gatetopay.logging.channel', 'gatetopay'))
-                    ->error('GateToPay API Error', [
-                        'message' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
-            }
-
-            throw new GateToPayException(
-                'Error communicating with GateToPay API: '.$e->getMessage(),
-                $e->getCode(),
-                $e
-            );
-        }
+        return app(CMSApiService::class)->createNewProfile($params);
     }
 
     /**
-     * Handle the API response.
+     * Generate a unique customer ID.
      *
-     * @param \Illuminate\Http\Client\Response $response
-     * @return array
-     * @throws \ASCIISD\GateToPay\Exceptions\GateToPayException
-     */
-    protected function handleResponse(Response $response): array
-    {
-        $body = $response->json() ?: [];
-
-        // Log the response
-        if (config('gatetopay.logging.enabled', true)) {
-            Log::channel(config('gatetopay.logging.channel', 'gatetopay'))
-                ->info('GateToPay API Response', [
-                    'status' => $response->status(),
-                    'body' => $this->sanitizeDataForLogging($body),
-                ]);
-        }
-
-        if (! $response->successful()) {
-            $errorMessage = $body['message'] ?? $response->body();
-            throw new GateToPayException(
-                'GateToPay API Error: '.$errorMessage,
-                $response->status()
-            );
-        }
-
-        // Check for API-level errors in the new response structure
-        if (isset($body['isSuccess']) && $body['isSuccess'] === false) {
-            $errorMessage = $body['errorMessage'] ?? 'Unknown API error';
-            $errorCode = $body['errorCode'] ?? 0;
-
-            throw new GateToPayException(
-                'GateToPay API Error: '.$errorMessage,
-                (int)$errorCode
-            );
-        }
-
-        return $body;
-    }
-
-    /**
-     * Build a query string from an array of parameters.
+     * This method is now moved to CMSApiService.
+     * This is kept for backward compatibility.
      *
-     * @param array $query
      * @return string
      */
-    protected function buildQueryString(array $query): string
+    public function generateCustomerId(): string
     {
-        if (empty($query)) {
-            return '';
-        }
-
-        return '?'.http_build_query($query);
-    }
-
-    /**
-     * Sanitize sensitive data for logging.
-     *
-     * @param array $data
-     * @return array
-     */
-    protected function sanitizeDataForLogging(array $data): array
-    {
-        $sensitiveFields = [
-            'password',
-            'cardNumber',
-            'cvv',
-            'otp',
-        ];
-
-        $sanitized = $data;
-
-        foreach ($sensitiveFields as $field) {
-            if (isset($sanitized[$field])) {
-                $sanitized[$field] = '********';
-            }
-        }
-
-        return $sanitized;
+        return app(CMSApiService::class)->generateCustomerId();
     }
 }

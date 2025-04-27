@@ -25,22 +25,22 @@ class TestConnectionCommand extends Command
     /**
      * Execute the console command.
      *
-     * @param \ASCIISD\GateToPay\Services\GateToPayService $service
+     * @param GateToPayService $service
      * @return int
      */
-    public function handle(GateToPayService $service)
+    public function handle(GateToPayService $service): int
     {
         $this->info('Testing connection to GateToPay API...');
 
         try {
             // Test the connection by fetching customer cards
             $cards = $service->getCustomerCards('6999999999');
-            
+
             $this->info('Connection successful!');
-            
-            if (isset($cards['customerCards']) && !empty($cards['customerCards'])) {
-                $this->info('Found ' . count($cards['customerCards']) . ' cards for the customer.');
-                
+
+            if (! empty($cards['customerCards'])) {
+                $this->info('Found '.count($cards['customerCards']).' cards for the customer.');
+
                 $this->table(
                     ['Card ID', 'Card Number'],
                     collect($cards['customerCards'])->map(function ($card) {
@@ -53,10 +53,10 @@ class TestConnectionCommand extends Command
             } else {
                 $this->info('No cards found for the customer.');
             }
-            
+
             return 0;
         } catch (GateToPayException $e) {
-            $this->error('Connection failed: ' . $e->getMessage());
+            $this->error('Connection failed: '.$e->getMessage());
             return 1;
         }
     }

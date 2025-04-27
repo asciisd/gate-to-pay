@@ -8,7 +8,7 @@ class GateToPayException extends Exception
 {
     // Custom exception codes
     const OTP_REQUIRED = 1001;
-    
+
     /**
      * Create a new GateToPayException instance.
      *
@@ -21,7 +21,7 @@ class GateToPayException extends Exception
     {
         parent::__construct($message, $code, $previous);
     }
-    
+
     /**
      * Check if OTP is required.
      *

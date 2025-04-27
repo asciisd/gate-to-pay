@@ -19,10 +19,18 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <env name="GATE_TO_PAY_API_KEY" value="your-api-key-here"/>
-        <env name="GATE_TO_PAY_USERNAME" value="your-username-here"/>
-        <env name="GATE_TO_PAY_PASSWORD" value="your-password-here"/>
-        <env name="GATE_TO_PAY_BASE_URL" value="https://tradetest.gatetopay.com"/>
-        <env name="GATE_TO_PAY_CURRENCY" value="USD"/>
+        <!-- Trade API Credentials -->
+        <env name="GATE_TO_PAY_TRADE_API_KEY" value="your-trade-api-key-here"/>
+        <env name="GATE_TO_PAY_TRADE_USERNAME" value="your-username-here"/>
+        <env name="GATE_TO_PAY_TRADE_PASSWORD" value="your-password-here"/>
+        <env name="GATE_TO_PAY_TRADE_BASE_URL" value="https://tradetest.gatetopay.com"/>
+        <env name="GATE_TO_PAY_TRADE_CURRENCY" value="USD"/>
+        
+        <!-- CMS API Credentials -->
+        <env name="GATE_TO_PAY_CMS_API_KEY" value="your-cms-api-key-here"/>
+        <env name="GATE_TO_PAY_CMS_BASE_URL" value="https://cmsopenapitest.gatetopay.com"/>
+        
+        <!-- Test Data -->
+        <env name="GATE_TO_PAY_CUSTOMER_ID" value="your-customer-id-here"/>
     </php>
 </phpunit>
