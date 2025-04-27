@@ -1,5 +1,9 @@
 # Gate To Pay Laravel Package
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/asciisd/gate-to-pay.svg?style=flat-square)](https://packagist.org/packages/asciisd/gate-to-pay)
+[![Total Downloads](https://img.shields.io/packagist/dt/asciisd/gate-to-pay.svg?style=flat-square)](https://packagist.org/packages/asciisd/gate-to-pay)
+[![License](https://img.shields.io/packagist/l/asciisd/gate-to-pay.svg?style=flat-square)](https://packagist.org/packages/asciisd/gate-to-pay)
+
 A Laravel package to integrate with Gate To Pay (GateToPay) payment service, supporting both Trade API and CMS Open API.
 
 ## Features
