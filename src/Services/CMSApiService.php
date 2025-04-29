@@ -68,7 +68,15 @@ class CMSApiService
         $payload['signature'] = $signature;
 
         // Make the API request
-        return $this->apiClient->request('POST', '/api/Profile/CreateProfile', [], $payload);
+        $response = $this->apiClient->request('POST', '/api/Profile/CreateProfile', [], $payload);
+        
+        // Check if the response indicates that the customer ID already exists
+        if (isset($response['isSuccess']) && $response['isSuccess'] === false && 
+            isset($response['message']) && str_contains($response['message'], 'customer id already exist')) {
+            throw new GateToPayException('Customer ID already exists: ' . $params['customerId'], 409);
+        }
+        
+        return $response;
     }
 
     /**
