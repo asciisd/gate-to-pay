@@ -125,20 +125,19 @@ You can test your webhook integration using tools like [Postman](https://www.pos
 ### Example curl command:
 
 ```bash
-curl -X POST \
-  https://your-domain.com/gatetopay/webhook \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json' \
-  -H 'X-Signature: your-signature-here' \
-  -d '{
+curl --location 'https://your-domain.com/gatetopay/webhook' \
+--header 'Accept: application/json' \
+--header 'Content-Type: application/json' \
+--header 'Signature: your-signature-here' \
+--data '{
     "customerId": "2304251234",
     "action": "created",
     "status": "success",
     "data": {
-      "id": "6377827323",
-      "cardNumber": "1234 XXXX XXXX 9932",
+        "id": "6377827323",
+        "cardNumber": "1234 XXXX XXXX 9932"
     }
-  }'
+}'
 ```
 
 ## Security Considerations
