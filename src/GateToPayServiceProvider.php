@@ -6,8 +6,10 @@ use ASCIISD\GateToPay\Commands\CreateProfileCommand;
 use ASCIISD\GateToPay\Commands\TestConnectionCommand;
 use ASCIISD\GateToPay\Helpers\SignatureService;
 use ASCIISD\GateToPay\Http\ApiClient;
+use ASCIISD\GateToPay\Http\Controllers\WebhookController;
 use ASCIISD\GateToPay\Services\CMSApiService;
 use ASCIISD\GateToPay\Services\GateToPayService;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class GateToPayServiceProvider extends ServiceProvider
@@ -81,5 +83,25 @@ class GateToPayServiceProvider extends ServiceProvider
                 CreateProfileCommand::class,
             ]);
         }
+
+        // Register webhook routes
+        $this->registerWebhookRoutes();
+    }
+
+    /**
+     * Register webhook routes.
+     *
+     * @return void
+     */
+    protected function registerWebhookRoutes(): void
+    {
+        Route::group([
+            'prefix' => config('gatetopay.webhook_path', 'gatetopay/webhook'),
+            'middleware' => config('gatetopay.webhook_middleware', ['api']),
+            'namespace' => 'ASCIISD\GateToPay\Http\Controllers',
+        ], function () {
+            Route::post('/', [WebhookController::class, 'handleWebhook'])
+                ->name('gatetopay.webhook.handle');
+        });
     }
 }

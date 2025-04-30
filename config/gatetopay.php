@@ -36,6 +36,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Webhook Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Here you may configure the webhook settings for receiving notifications
+    | from GateToPay when customer profiles are updated.
+    |
+    */
+
+    'webhook_path' => env('GATE_TO_PAY_WEBHOOK_PATH', 'gatetopay/webhook'),
+    'webhook_middleware' => ['api'],
+    'verify_webhook_signature' => env('GATE_TO_PAY_VERIFY_WEBHOOK_SIGNATURE', true),
+    'debug' => env('GATE_TO_PAY_DEBUG', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Logging Configuration
     |--------------------------------------------------------------------------
     |
