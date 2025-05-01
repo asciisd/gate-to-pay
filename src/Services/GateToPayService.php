@@ -3,6 +3,7 @@
 namespace ASCIISD\GateToPay\Services;
 
 use ASCIISD\GateToPay\Exceptions\GateToPayException;
+use ASCIISD\GateToPay\Exceptions\GateToPayMissingParamsException;
 use ASCIISD\GateToPay\Helpers\SignatureService;
 use ASCIISD\GateToPay\Http\ApiClient;
 use Illuminate\Support\Str;
@@ -161,12 +162,12 @@ class GateToPayService
      *
      * @param array $params
      * @return array
-     * @throws GateToPayException
+     * @throws GateToPayException|GateToPayMissingParamsException
      */
     public function cardCashIn(array $params): array
     {
         if (! isset($params['customerId'])) {
-            throw new GateToPayException('Customer ID is required for card cash in');
+            throw new GateToPayMissingParamsException('Customer ID is required for card cash in');
         }
 
         $customerId = $params['customerId'];
@@ -177,7 +178,7 @@ class GateToPayService
         $cardExpiryDate = $params['cardExpiryDate'] ?? null;
 
         if (! $cardId || ! $withdrawalAmount || ! $cardExpiryDate) {
-            throw new GateToPayException('Missing required parameters for card cash in');
+            throw new GateToPayMissingParamsException('Missing required parameters for card cash in');
         }
 
         $signatureData = $customerId.$cardId.$withdrawalAmount.$currency.$transactionId.$cardExpiryDate;
